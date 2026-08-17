@@ -1,0 +1,14 @@
+go get github.com/gin-gonic/gin@latest
+
+go get github.com/joho/godotenv
+
+go get go.mongodb.org/mongo-driver/mongo
+
+go get go.mongodb.org/mongo-driver/mongo/options
+
+
+//like same nodemon
+go install github.com/air-verse/air@latest
+
+
+//go mod tidy
