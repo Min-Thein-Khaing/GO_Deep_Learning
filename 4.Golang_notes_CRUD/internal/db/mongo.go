@@ -1,4 +1,4 @@
-package mongo
+package db
 
 import (
 	"context"
@@ -30,7 +30,7 @@ func Connect(cfg config.Config) (*mongo.Client, *mongo.Database, error) {
 }
 
 func Disconnect(client *mongo.Client) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	if err := client.Disconnect(ctx); err != nil {
 		return fmt.Errorf("failed to disconnect from MongoDB: %v", err)

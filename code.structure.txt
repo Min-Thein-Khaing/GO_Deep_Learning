@@ -1,0 +1,49 @@
+my-saas-app/
+├── cmd/
+│   └── api/
+│       └── main.go                  # Entry point (Wires up DB, dependencies, and router)
+│
+├── internal/                        # Private application code
+│   ├── config/
+│   │   └── config.go                # Environment & secret loader
+│   │
+│   ├── database/
+│   │   ├── mongodb.go               # MongoDB client & connection pool
+│   │   └── migrations.go            # Index creation & schema setup
+│   │
+│   ├── middleware/
+│   │   ├── auth.go                  # JWT authentication validator
+│   │   ├── rate_limit.go            # Rate limiter
+│   │   └── logger.go                # Structured request logger
+│   │
+│   ├── user/                        # 👤 Domain 1: User Feature
+│   │   ├── model.go                 # User, Role, Profile structs (DB schemas)
+│   │   ├── dto.go                   # LoginRequest, RegisterInput (API payload structs)
+│   │   ├── repository.go            # Mongo/SQL queries for users
+│   │   ├── service.go               # Hash passwords, generate JWTs, verify emails
+│   │   └── handler.go               # HTTP handlers (POST /login, GET /profile)
+│   │
+│   ├── note/                        # 📝 Domain 2: Note Feature
+│   │   ├── model.go                 # Note, Tag, NoteRevision structs
+│   │   ├── dto.go                   # CreateNoteInput, UpdateNoteInput
+│   │   ├── repository.go            # Mongo/SQL queries for notes
+│   │   ├── service.go               # Note business rules, tag assignment
+│   │   └── handler.go               # HTTP handlers (POST /notes, GET /notes/:id)
+│   │
+│   ├── comment/                     # 💬 Domain 3: Comment Feature
+│   │   ├── model.go                 # Comment struct (references UserID & NoteID)
+│   │   ├── repository.go
+│   │   ├── service.go
+│   │   └── handler.go
+│   │
+│   └── server/
+│       ├── router.go                # Registers all domain routes to the Gin engine
+│       └── server.go                # HTTP Server wrapper with graceful shutdown
+│
+├── pkg/                             # 🌍 Shared code safe for external use
+│   ├── validator/                   # Custom input validator helpers
+│   └── response/                    # Standardized API JSON response helpers
+│
+├── .env
+├── go.mod
+└── go.sum
