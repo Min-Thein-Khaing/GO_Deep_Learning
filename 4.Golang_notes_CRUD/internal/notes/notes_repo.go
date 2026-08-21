@@ -13,20 +13,28 @@ import (
 
 //Repo-data access layer
 
+type Repo interface {
+	Create(ctx context.Context, note Note) (Note, error)
+	List(ctx context.Context) ([]Note, error)
+	FindByID(ctx context.Context, id primitive.ObjectID) (Note, error)
+	Update(ctx context.Context, id primitive.ObjectID, updatedNote UpdateNoteRequest) (Note, error)
+	Delete(ctx context.Context, id primitive.ObjectID) (Note, error)
+}
+
 // this is including *mongo.Collection crud method logic
-type Repo struct {
+type repo struct {
 	coll *mongo.Collection
 }
 
 // constructor function
-func NewRepo(db *mongo.Database) *Repo {
+func NewRepo(db *mongo.Database) Repo {
 
-	return &Repo{
+	return &repo{
 		coll: db.Collection("notes"),
 	}
 }
 
-func (r *Repo) Create(ctx context.Context, note Note) (Note, error) {
+func (r *repo) Create(ctx context.Context, note Note) (Note, error) {
 
 	opCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
 
@@ -41,7 +49,7 @@ func (r *Repo) Create(ctx context.Context, note Note) (Note, error) {
 	return note, nil
 }
 
-func (r *Repo) List(ctx context.Context) ([]Note, error) {
+func (r *repo) List(ctx context.Context) ([]Note, error) {
 
 	opCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
@@ -65,7 +73,7 @@ func (r *Repo) List(ctx context.Context) ([]Note, error) {
 	return notes, nil
 }
 
-func (r *Repo) FindByID(ctx context.Context, id primitive.ObjectID) (Note, error) {
+func (r *repo) FindByID(ctx context.Context, id primitive.ObjectID) (Note, error) {
 	opCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
@@ -80,7 +88,7 @@ func (r *Repo) FindByID(ctx context.Context, id primitive.ObjectID) (Note, error
 	return note, nil
 }
 
-func (r *Repo) Delete(ctx context.Context, id primitive.ObjectID) (Note, error) {
+func (r *repo) Delete(ctx context.Context, id primitive.ObjectID) (Note, error) {
 	opCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
@@ -95,7 +103,7 @@ func (r *Repo) Delete(ctx context.Context, id primitive.ObjectID) (Note, error) 
 	return note, nil
 }
 
-func (r *Repo) Update(ctx context.Context, id primitive.ObjectID, updatedNote UpdateNoteRequest) (Note, error) {
+func (r *repo) Update(ctx context.Context, id primitive.ObjectID, updatedNote UpdateNoteRequest) (Note, error) {
 	opCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 

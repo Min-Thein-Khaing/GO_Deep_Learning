@@ -23,7 +23,7 @@ PUT http://localhost:8080/notes/6a880b062423f3e384c957b9
 
 
 {
-    "title" : "title update 2",
-    "content":"content update 2",
+    "title" : "title updated 2",
+    "content":"content updated 2",
     "pinned":true
 }
