@@ -1,0 +1,29 @@
+//create
+POST http://localhost:8080/notes
+
+
+{
+    "title" : "title 2",
+    "content":"content 2",
+    "pinned":false
+}
+
+
+//find all
+GET http://localhost:8080/notes
+
+//find each by id
+GET http://localhost:8080/notes/6a880b062423f3e384c957ba
+
+//delete
+DELETE http://localhost:8080/notes/6a87d3d6d08034e245b34e5a
+
+
+PUT http://localhost:8080/notes/6a880b062423f3e384c957b9
+
+
+{
+    "title" : "title update 2",
+    "content":"content update 2",
+    "pinned":true
+}

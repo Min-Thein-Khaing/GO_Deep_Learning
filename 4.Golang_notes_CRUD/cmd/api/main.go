@@ -26,7 +26,7 @@ func main() {
 		}
 	}()
 
-	router := server.NewRouter()
+	router := server.NewRouter(database)
 	addr := fmt.Sprintf(":%s", cfg.ServerPORT)
 
 	if err := router.Run(addr); err != nil {
