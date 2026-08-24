@@ -1,0 +1,21 @@
+POST http://localhost:8080/register
+Content-Type: application/json
+
+{
+    "email": "zaw@gmail.com",
+    "password": "password"
+}
+
+###
+
+POST http://localhost:8080/login
+Content-Type: application/json
+
+{
+    "email": "zaw@gmail.com",
+    "password": "password"
+}
+
+GET http://localhost:8080/api/files
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2YThhZGRlNGQ0Mzg1MTdiNDY2NTljNDIiLCJleHAiOjE3ODgxNTA3MTMsImlhdCI6MTc4NzU0NTkxMywicm9sZSI6InVzZXIifQ.Mb3R_8Q8sRc4831TY8T97GX21s4jdjOHwjXHhNRLDYI

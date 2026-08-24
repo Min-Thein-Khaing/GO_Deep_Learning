@@ -1,0 +1,17 @@
+//framework
+go get github.com/gin-gonic/gin@latest
+
+//get env
+go get github.com/joho/godotenv
+
+//bcrypt
+go get golang.org/x/crypto/bcrypt
+//jwt
+go get github.com/golang-jwt/jwt/v5
+
+//database 
+go get go.mongodb.org/mongo-driver/mongo
+go get go.mongodb.org/mongo-driver/mongo/options
+
+//like same nodemon
+go install github.com/air-verse/air@latest
