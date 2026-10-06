@@ -10,12 +10,14 @@ func main() {
 
 	fmt.Println("case 1 : working")
 
-	if err := doWork(true) ; err != nil {
-		log.Fatal(err)
+	if err := doWork(true); err != nil {
+		log.Println("Error:", err) // log.Fatal အစား log.Println သုံးထားပါသည်
 	}
-	fmt.Println("case 1 : fail")
-if err := doWork(false) ; err != nil {
-		log.Fatal(err)
+
+	fmt.Println("\ncase 2 : fail")
+
+	if err := doWork(false); err != nil {
+		log.Println("Error:", err) // Program ဆက်လက် Run နိုင်မည် ဖြစ်သည်
 	}
 }
 
@@ -26,10 +28,10 @@ func doWork(success bool) error {
 	defer fmt.Println("clean : resource acquired")
 
 	if !success {
-		return errors.New("something went wrong.i am returning early")
+		return errors.New("something went wrong. i am returning early")
 	}
 	fmt.Println("working doing smthing imp")
-	fmt.Println("work :this work is done")
+	fmt.Println("work : this work is done")
 	return nil
 
 }
