@@ -54,14 +54,14 @@ func CreateRefreshToken(jwtSecret string, userID string, role string) (string, e
 	return token.SignedString([]byte(jwtSecret))
 }
 
-// GenerateTokenPair generates both access and refresh tokens
-func GenerateTokenPair(jwtSecret string, userID string, role string) (TokenPair, error) {
-	accessToken, err := CreateAccessToken(jwtSecret, userID, role)
+// GenerateTokenPair generates both access (15 min) and refresh (7 days) tokens
+func GenerateTokenPair(accessSecret string, refreshSecret string, userID string, role string) (TokenPair, error) {
+	accessToken, err := CreateAccessToken(accessSecret, userID, role)
 	if err != nil {
 		return TokenPair{}, err
 	}
 
-	refreshToken, err := CreateRefreshToken(jwtSecret, userID, role)
+	refreshToken, err := CreateRefreshToken(refreshSecret, userID, role)
 	if err != nil {
 		return TokenPair{}, err
 	}

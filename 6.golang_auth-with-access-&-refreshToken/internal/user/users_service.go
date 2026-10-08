@@ -14,13 +14,15 @@ import (
 type Service struct {
 	repo Repo
 
-	jwtSecret string
+	jwtAccessSecret  string
+	jwtRefreshSecret string
 }
 
-func NewService(repo Repo, jwtSecret string) *Service {
+func NewService(repo Repo, jwtAccessSecret string, jwtRefreshSecret string) *Service {
 	return &Service{
-		repo:      repo,
-		jwtSecret: jwtSecret,
+		repo:             repo,
+		jwtAccessSecret:  jwtAccessSecret,
+		jwtRefreshSecret: jwtRefreshSecret,
 	}
 }
 
@@ -76,9 +78,14 @@ func (s *Service) Register(ctx context.Context, input RegisterInput) (AuthResult
 		return AuthResult{}, fmt.Errorf("create user failed: %w", err)
 	}
 
-	tokens, err := auth.GenerateTokenPair(s.jwtSecret, user.ID, user.Role)
+	tokens, err := auth.GenerateTokenPair(s.jwtAccessSecret, s.jwtRefreshSecret, user.ID, user.Role)
 	if err != nil {
 		return AuthResult{}, fmt.Errorf("create tokens failed: %w", err)
+	}
+
+	// Save refresh token to user model in database
+	if err := s.repo.UpdateRefreshToken(ctx, user.ID, tokens.RefreshToken); err != nil {
+		return AuthResult{}, fmt.Errorf("save refresh token failed: %w", err)
 	}
 
 	return AuthResult{
@@ -108,9 +115,14 @@ func (s *Service) Login(ctx context.Context, input LoginInput) (AuthResult, erro
 		return AuthResult{}, errors.New("invalid credentials")
 	}
 
-	tokens, err := auth.GenerateTokenPair(s.jwtSecret, user.ID, user.Role)
+	tokens, err := auth.GenerateTokenPair(s.jwtAccessSecret, s.jwtRefreshSecret, user.ID, user.Role)
 	if err != nil {
 		return AuthResult{}, fmt.Errorf("create tokens failed: %w", err)
+	}
+
+	// Save refresh token to user model in database
+	if err := s.repo.UpdateRefreshToken(ctx, user.ID, tokens.RefreshToken); err != nil {
+		return AuthResult{}, fmt.Errorf("save refresh token failed: %w", err)
 	}
 
 	return AuthResult{
@@ -127,7 +139,7 @@ func (s *Service) RefreshToken(ctx context.Context, refreshTokenStr string) (Aut
 		return AuthResult{}, errors.New("refresh token is required")
 	}
 
-	claims, err := auth.ParseAndValidateToken(s.jwtSecret, refreshTokenStr)
+	claims, err := auth.ParseAndValidateToken(s.jwtRefreshSecret, refreshTokenStr)
 	if err != nil {
 		return AuthResult{}, fmt.Errorf("invalid or expired refresh token: %w", err)
 	}
@@ -141,9 +153,19 @@ func (s *Service) RefreshToken(ctx context.Context, refreshTokenStr string) (Aut
 		return AuthResult{}, errors.New("user not found")
 	}
 
-	tokens, err := auth.GenerateTokenPair(s.jwtSecret, user.ID, user.Role)
+	// Check if refresh token matches the one stored in database
+	if user.RefreshToken != refreshTokenStr {
+		return AuthResult{}, errors.New("invalid or revoked refresh token")
+	}
+
+	tokens, err := auth.GenerateTokenPair(s.jwtAccessSecret, s.jwtRefreshSecret, user.ID, user.Role)
 	if err != nil {
 		return AuthResult{}, fmt.Errorf("generate tokens failed: %w", err)
+	}
+
+	// Update rotated refresh token in database
+	if err := s.repo.UpdateRefreshToken(ctx, user.ID, tokens.RefreshToken); err != nil {
+		return AuthResult{}, fmt.Errorf("save refresh token failed: %w", err)
 	}
 
 	return AuthResult{

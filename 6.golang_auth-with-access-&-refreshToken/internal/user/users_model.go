@@ -14,6 +14,7 @@ type User struct {
 	Email          string    `json:"email" bson:"email"`
 	HashedPassword string    `json:"-" bson:"hashed_password"`
 	Role           string    `json:"role" bson:"role"`
+	RefreshToken   string    `json:"-" bson:"refresh_token,omitempty"`
 	CreatedAt      time.Time `json:"createdAt" bson:"createdAt"`
 	UpdatedAt      time.Time `json:"updatedAt" bson:"updatedAt"`
 }

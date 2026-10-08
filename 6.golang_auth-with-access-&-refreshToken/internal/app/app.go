@@ -31,9 +31,6 @@ func New(ctx context.Context) (*App, error) {
 }
 
 func (a *App) Close() error {
-	if a.Client != nil {
-		return db.Disconnect(&db.MongoDB{Client: a.Client, DB: a.DB})
-	}
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 

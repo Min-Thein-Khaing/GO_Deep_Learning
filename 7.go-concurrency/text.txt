@@ -1,0 +1,44 @@
+// ==========================================
+// 1. Dependency Installation Commands
+// ==========================================
+
+// errgroup, semaphore, and advanced concurrency tools
+go get golang.org/x/sync
+
+
+// ==========================================
+// 2. Concurrency Run Commands
+// ==========================================
+
+// 01. Basic Goroutine
+go run ./01.goroutine/main.go
+
+// 02. WaitGroup
+go run ./02.goSyncWaitGroup/main.go
+
+// 03. Unbuffered Channel
+go run ./03.channel/main.go
+
+// 04. Buffered Channel
+go run ./04.buffer_channel/main.go
+
+// 05. Select Statement
+go run ./05.select/main.go
+
+// 06. Context (Cancellation & Timeout)
+go run ./06.Context/main.go
+
+// 07. Sync Once
+go run ./07.sync_once/main.go
+
+// 08. Mutex & Race Condition (Notice: -race flag detects data races!)
+go run -race ./08.mutex_and_race/main.go
+
+// 09. Worker Pool Pattern
+go run ./09.worker_pool/main.go
+
+// 10. ErrGroup (Concurrent Tasks with Error Handling)
+go run ./10.errgroup/main.go
+
+// 11. Rate Limiting (Ticker & Token Bucket)
+go run ./11.rate_limiting/main.go

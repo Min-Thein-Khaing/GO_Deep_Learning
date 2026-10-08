@@ -18,7 +18,7 @@ func NewRouter(a *app.App) *gin.Engine {
 	r.GET("/health", health)
 
 	repo := user.NewRepo(a.DB)
-	svc := user.NewService(repo, a.Config.JWT_SECRET)
+	svc := user.NewService(repo, a.Config.JWT_SECRET, a.Config.JWT_REFRESH_SECRET)
 	handler := user.NewHandler(svc)
 
 

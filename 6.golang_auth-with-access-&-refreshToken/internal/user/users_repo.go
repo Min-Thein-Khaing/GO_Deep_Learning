@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -14,6 +15,7 @@ type Repo interface {
 	Create(ctx context.Context, user User) (User, error)
 	FindByEmail(ctx context.Context, email string) (User, error)
 	FindByID(ctx context.Context, id string) (User, error)
+	UpdateRefreshToken(ctx context.Context, id string, refreshToken string) error
 }
 
 type repo struct {
@@ -67,4 +69,24 @@ func (r *repo) FindByID(ctx context.Context, id string) (User, error) {
 	}
 	return user, nil
 }
+
+func (r *repo) UpdateRefreshToken(ctx context.Context, id string, refreshToken string) error {
+	objID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return fmt.Errorf("invalid user id: %w", err)
+	}
+	filter := bson.M{"_id": objID}
+	update := bson.M{
+		"$set": bson.M{
+			"refresh_token": refreshToken,
+			"updatedAt":     time.Now().UTC(),
+		},
+	}
+	_, err = r.col.UpdateOne(ctx, filter, update)
+	if err != nil {
+		return fmt.Errorf("failed to update refresh token: %w", err)
+	}
+	return nil
+}
+
 

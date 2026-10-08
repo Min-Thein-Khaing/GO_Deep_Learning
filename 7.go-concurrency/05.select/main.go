@@ -10,12 +10,12 @@ func main() {
 	ch2 := make(chan string)
 
 	go func() {
-		time.Sleep(1 * time.Second)
+		time.Sleep(13 * time.Second)
 		ch1 <- "Channel 1 မှ data ရောက်လာသည်"
 	}()
 
 	go func() {
-		time.Sleep(2 * time.Second)
+		time.Sleep(12 * time.Second)
 		ch2 <- "Channel 2 မှ data ရောက်လာသည်"
 	}()
 
@@ -27,6 +27,7 @@ func main() {
 func Selected(ch1, ch2 <-chan string,timeout time.Duration)string  {
 
 	select {
+
 	case msg1 := <-ch1:
 		return msg1
 	case msg2 := <-ch2:
