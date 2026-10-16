@@ -98,3 +98,59 @@ func main() {
 	cacheWg.Wait()
 	fmt.Println("All done safely without data race!")
 }
+
+
+
+
+// type Session struct {
+// 	UserID    int
+// 	ExpiresAt time.Time
+// }
+
+// type SessionStore struct {
+// 	mu       sync.RWMutex
+// 	sessions map[string]Session // key = session ID
+// }
+
+// func NewSessionStore() *SessionStore {
+// 	return &SessionStore{sessions: make(map[string]Session)}
+// }
+
+// func (s *SessionStore) Create(id string, userID int, ttl time.Duration) {
+// 	s.mu.Lock()
+// 	defer s.mu.Unlock()
+// 	s.sessions[id] = Session{UserID: userID, ExpiresAt: time.Now().Add(ttl)}
+// }
+
+// func (s *SessionStore) Get(id string) (Session, bool) {
+// 	s.mu.RLock()
+// 	defer s.mu.RUnlock()
+// 	sess, ok := s.sessions[id]
+// 	if !ok || time.Now().After(sess.ExpiresAt) {
+// 		return Session{}, false
+// 	}
+// 	return sess, true
+// }
+
+// func (s *SessionStore) Delete(id string) {
+// 	s.mu.Lock()
+// 	defer s.mu.Unlock()
+// 	delete(s.sessions, id)
+// }
+
+// Gin ထဲမှာ သုံးပုံ
+// store := NewSessionStore()
+
+// r.POST("/login", func(c *gin.Context) {
+// 	store.Create("abc123", 1, 30*time.Minute)
+// 	c.JSON(200, gin.H{"session": "abc123"})
+// })
+
+// r.GET("/me", func(c *gin.Context) {
+// 	sess, ok := store.Get(c.GetHeader("X-Session"))
+// 	if !ok {
+// 		c.JSON(401, gin.H{"error": "unauthorized"})
+// 		return
+// 	}
+// 	c.JSON(200, gin.H{"user_id": sess.UserID})
+// })
