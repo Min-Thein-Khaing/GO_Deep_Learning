@@ -1,0 +1,18 @@
+// framework
+go get github.com/gin-gonic/gin@latest
+
+// get env
+go get github.com/joho/godotenv
+
+// bcrypt
+go get golang.org/x/crypto/bcrypt
+
+// jwt
+go get github.com/golang-jwt/jwt/v5
+
+// database - postgresql driver
+go get github.com/lib/pq
+
+// hot reload tool
+go install github.com/air-verse/air@latest
+

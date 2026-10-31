@@ -1,0 +1,34 @@
+### Register
+POST http://localhost:8080/register
+Content-Type: application/json
+
+{
+    "email": "zaw@gmail.com",
+    "password": "password123"
+}
+
+### Login
+POST http://localhost:8080/login
+Content-Type: application/json
+
+{
+    "email": "zaw@gmail.com",
+    "password": "password123"
+}
+
+### Refresh Token
+POST http://localhost:8080/refresh
+Content-Type: application/json
+
+{
+    "refresh_token": "<paste_refresh_token_here>"
+}
+
+### Protected Route - Get Files
+GET http://localhost:8080/api/files
+Content-Type: application/json
+Authorization: Bearer <paste_access_token_here>
+
+### Health Check
+GET http://localhost:8080/health
+
