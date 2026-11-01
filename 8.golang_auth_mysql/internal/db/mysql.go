@@ -2,65 +2,57 @@ package db
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
-	"go_auth_mysql/internal/config"
 	"time"
 
-	_ "github.com/go-sql-driver/mysql"
+	"go_auth_mysql/internal/config"
+	"go_auth_mysql/internal/user"
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
 )
 
 type MySQLDB struct {
-	DB *sql.DB
+	DB *gorm.DB
 }
 
 func Connect(cfg config.Config) (*MySQLDB, error) {
-	dsn := cfg.MySQLDSN()
-
-	db, err := sql.Open("mysql", dsn)
+	db, err := gorm.Open(mysql.Open(cfg.MySQLDSN()), &gorm.Config{})
 	if err != nil {
 		return nil, fmt.Errorf("failed to open MySQL connection: %w", err)
 	}
 
-	db.SetMaxOpenConns(25)
-	db.SetMaxIdleConns(10)
-	db.SetConnMaxLifetime(5 * time.Minute)
+	sqlDB, err := db.DB()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get MySQL connection pool: %w", err)
+	}
+	sqlDB.SetMaxOpenConns(25)
+	sqlDB.SetMaxIdleConns(10)
+	sqlDB.SetConnMaxLifetime(5 * time.Minute)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	if err := db.PingContext(ctx); err != nil {
+	if err := sqlDB.PingContext(ctx); err != nil {
+		_ = sqlDB.Close()
 		return nil, fmt.Errorf("failed to ping MySQL: %w", err)
 	}
 
-	fmt.Println("Connected to MySQL")
-
-	if err := initSchema(ctx, db); err != nil {
+	if err := db.WithContext(ctx).AutoMigrate(&user.UserRecord{}); err != nil {
+		_ = sqlDB.Close()
 		return nil, fmt.Errorf("failed to initialize database schema: %w", err)
 	}
 
+	fmt.Println("Connected to MySQL")
 	return &MySQLDB{DB: db}, nil
-}
-
-func initSchema(ctx context.Context, db *sql.DB) error {
-	query := `
-	CREATE TABLE IF NOT EXISTS users (
-		id BIGINT AUTO_INCREMENT PRIMARY KEY,
-		email VARCHAR(255) NOT NULL UNIQUE,
-		hashed_password TEXT NOT NULL,
-		role VARCHAR(50) NOT NULL DEFAULT 'user',
-		refresh_token TEXT,
-		created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-		updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-	) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;`
-	_, err := db.ExecContext(ctx, query)
-	return err
 }
 
 func Disconnect(mysqlDB *MySQLDB) error {
 	if mysqlDB == nil || mysqlDB.DB == nil {
 		return nil
 	}
-	return mysqlDB.DB.Close()
+	sqlDB, err := mysqlDB.DB.DB()
+	if err != nil {
+		return fmt.Errorf("failed to get MySQL connection pool: %w", err)
+	}
+	return sqlDB.Close()
 }
-

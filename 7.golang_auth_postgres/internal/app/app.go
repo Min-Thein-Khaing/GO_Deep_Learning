@@ -2,14 +2,15 @@ package app
 
 import (
 	"context"
-	"database/sql"
 	"go_auth_postgres/internal/config"
 	"go_auth_postgres/internal/db"
+
+	"gorm.io/gorm"
 )
 
 type App struct {
 	Config *config.Config
-	DB     *sql.DB
+	DB     *gorm.DB
 }
 
 func New(ctx context.Context) (*App, error) {
@@ -28,8 +29,11 @@ func New(ctx context.Context) (*App, error) {
 
 func (a *App) Close() error {
 	if a.DB != nil {
-		return a.DB.Close()
+		sqlDB, err := a.DB.DB()
+		if err != nil {
+			return err
+		}
+		return sqlDB.Close()
 	}
 	return nil
 }
-

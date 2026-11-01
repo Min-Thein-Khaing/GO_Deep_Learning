@@ -2,11 +2,13 @@ package user
 
 import (
 	"context"
-	"database/sql"
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
 	"time"
+
+	"gorm.io/gorm"
 )
 
 type Repo interface {
@@ -17,68 +19,41 @@ type Repo interface {
 }
 
 type repo struct {
-	db *sql.DB
+	db *gorm.DB
 }
 
-func NewRepo(db *sql.DB) Repo {
-	return &repo{
-		db: db,
-	}
+func NewRepo(db *gorm.DB) Repo {
+	return &repo{db: db}
 }
 
 func (r *repo) Create(ctx context.Context, user User) (User, error) {
-	query := `
-	INSERT INTO users (email, hashed_password, role, refresh_token, created_at, updated_at)
-	VALUES (?, ?, ?, ?, ?, ?);
-	`
-	res, err := r.db.ExecContext(ctx, query,
-		user.Email,
-		user.HashedPassword,
-		user.Role,
-		user.RefreshToken,
-		user.CreatedAt,
-		user.UpdatedAt,
-	)
-	if err != nil {
+	record := UserRecord{
+		Email:          user.Email,
+		HashedPassword: user.HashedPassword,
+		Role:           user.Role,
+		RefreshToken:   user.RefreshToken,
+		CreatedAt:      user.CreatedAt,
+		UpdatedAt:      user.UpdatedAt,
+	}
+	if err := r.db.WithContext(ctx).Create(&record).Error; err != nil {
 		return User{}, fmt.Errorf("insert user failed: %w", err)
 	}
-
-	lastID, err := res.LastInsertId()
-	if err != nil {
-		return User{}, fmt.Errorf("failed to get last insert ID: %w", err)
-	}
-
-	user.ID = strconv.FormatInt(lastID, 10)
-	return user, nil
+	return toUser(record), nil
 }
 
 func (r *repo) FindByEmail(ctx context.Context, email string) (User, error) {
 	email = strings.ToLower(strings.TrimSpace(email))
-	query := `
-	SELECT id, email, hashed_password, role, COALESCE(refresh_token, ''), created_at, updated_at
-	FROM users
-	WHERE LOWER(email) = LOWER(?);
-	`
-	var id int64
-	var user User
-	err := r.db.QueryRowContext(ctx, query, email).Scan(
-		&id,
-		&user.Email,
-		&user.HashedPassword,
-		&user.Role,
-		&user.RefreshToken,
-		&user.CreatedAt,
-		&user.UpdatedAt,
-	)
+	var record UserRecord
+	err := r.db.WithContext(ctx).
+		Where("LOWER(email) = ?", email).
+		First(&record).Error
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return User{}, fmt.Errorf("user not found: %w", err)
 		}
 		return User{}, fmt.Errorf("find user failed: %w", err)
 	}
-
-	user.ID = strconv.FormatInt(id, 10)
-	return user, nil
+	return toUser(record), nil
 }
 
 func (r *repo) FindByID(ctx context.Context, id string) (User, error) {
@@ -87,30 +62,15 @@ func (r *repo) FindByID(ctx context.Context, id string) (User, error) {
 		return User{}, fmt.Errorf("invalid user id: %w", err)
 	}
 
-	query := `
-	SELECT id, email, hashed_password, role, COALESCE(refresh_token, ''), created_at, updated_at
-	FROM users
-	WHERE id = ?;
-	`
-	var user User
-	err = r.db.QueryRowContext(ctx, query, intID).Scan(
-		&intID,
-		&user.Email,
-		&user.HashedPassword,
-		&user.Role,
-		&user.RefreshToken,
-		&user.CreatedAt,
-		&user.UpdatedAt,
-	)
+	var record UserRecord
+	err = r.db.WithContext(ctx).First(&record, intID).Error
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return User{}, fmt.Errorf("user not found: %w", err)
 		}
 		return User{}, fmt.Errorf("find user by id failed: %w", err)
 	}
-
-	user.ID = strconv.FormatInt(intID, 10)
-	return user, nil
+	return toUser(record), nil
 }
 
 func (r *repo) UpdateRefreshToken(ctx context.Context, id string, refreshToken string) error {
@@ -119,16 +79,29 @@ func (r *repo) UpdateRefreshToken(ctx context.Context, id string, refreshToken s
 		return fmt.Errorf("invalid user id: %w", err)
 	}
 
-	query := `
-	UPDATE users
-	SET refresh_token = ?, updated_at = ?
-	WHERE id = ?;
-	`
-	_, err = r.db.ExecContext(ctx, query, refreshToken, time.Now().UTC(), intID)
-	if err != nil {
-		return fmt.Errorf("failed to update refresh token: %w", err)
+	result := r.db.WithContext(ctx).Model(&UserRecord{}).
+		Where("id = ?", intID).
+		Updates(map[string]interface{}{
+			"refresh_token": refreshToken,
+			"updated_at":    time.Now().UTC(),
+		})
+	if result.Error != nil {
+		return fmt.Errorf("failed to update refresh token: %w", result.Error)
 	}
-
+	if result.RowsAffected == 0 {
+		return fmt.Errorf("user not found")
+	}
 	return nil
 }
 
+func toUser(record UserRecord) User {
+	return User{
+		ID:             strconv.FormatInt(record.ID, 10),
+		Email:          record.Email,
+		HashedPassword: record.HashedPassword,
+		Role:           record.Role,
+		RefreshToken:   record.RefreshToken,
+		CreatedAt:      record.CreatedAt,
+		UpdatedAt:      record.UpdatedAt,
+	}
+}
